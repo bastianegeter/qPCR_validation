@@ -14,7 +14,7 @@ if(!is.element("SHINY",ls())){
                    ),
                  "Setting"=c(
                    2,
-                   45,
+                   55,
                    1,
                    30,
                    1,
@@ -147,9 +147,47 @@ DF$LOD_threshold[which(DF$Target_Cq>LOD_Cq)]<-"FAILED"
 DF$LOD_threshold[which(DF$LOD_threshold=="NOT_DONE")]<-"PASSED"
 
 #interpretations
+DF$interp1<-"NOT_DONE"
+
+DF$interp1[which(DF$LOD_threshold=="PASSED" & DF$IPC_threshold=="PASSED")] <-"positive"
+DF$interp1[which(DF$LOD_threshold=="PASSED" & DF$IPC_threshold=="IPC NOT USED")] <-"positive"
+DF$interp1[which(DF$LOD_threshold=="PASSED" & DF$IPC_threshold=="FAILED")] <-"positive"
 
 
-#=IF(M90="PASSED",IF(L90="PASSED","positive",IF(L90="IPC NOT USED","positive","positive")),IF(M90="NO DETECTABLE CURVE",IF(L90="PASSED","negative",IF(L90="IPC NOT USED","not detected, inhibition not tested","not detected, PCR inhibited")),IF(L90="PASSED","weak signal below LOD, no inhibition observed",IF(L90="IPC NOT USED","weak signal below LOD, inhibition not tested","weak signal below LOD, inhibition observed"))))
+DF$interp1[which(DF$LOD_threshold=="NO DETECTABLE CURVE" & DF$IPC_threshold=="PASSED")] <-"negative"
+DF$interp1[which(DF$LOD_threshold=="NO DETECTABLE CURVE" & 
+                   DF$IPC_threshold=="IPC NOT USED")] <-"not detected, inhibition not tested"
+
+DF$interp1[which(DF$LOD_threshold=="NO DETECTABLE CURVE" & 
+                   DF$IPC_threshold!="PASSED" & 
+                   DF$IPC_threshold!="IPC NOT USED")] <-"not detected, PCR inhibited"
+
+DF$interp1[which(DF$LOD_threshold!="NO DETECTABLE CURVE" & 
+                   DF$LOD_threshold!="PASSED" &
+                   DF$IPC_threshold=="PASSED")] <-"weak signal below LOD, no inhibition observed"
+
+DF$interp1[which(DF$LOD_threshold!="NO DETECTABLE CURVE" & 
+                   DF$LOD_threshold!="PASSED" &
+                   DF$IPC_threshold!="PASSED" &
+                   DF$IPC_threshold=="IPC NOT USED")] <-"weak signal below LOD, inhibition not tested"
+
+DF$interp1[which(DF$LOD_threshold!="NO DETECTABLE CURVE" & 
+                   DF$LOD_threshold!="PASSED" &
+                   DF$IPC_threshold!="PASSED" &
+                   DF$IPC_threshold!="IPC NOT USED")] <-"weak signal below LOD, inhibition observed"
+
+
+#INTERP2
+DF$interp2<-"NOT_DONE"
+which(DF$interp1=="positive")
+
+#gotta do all the negs
+
+#=
+# IF(REGEXMATCH(N2,"positive")=TRUE,
+#    IF(Q2="CONTAMINATED","Inconclusive: PCR negative contaminated",
+#       IF(P2="CONTAMINATED","Inconclusive: extraction batch contaminated",N2)),
+#    IF(R2="NOT ALL PCS AMPLIFIED","Inconclusive: not all positive controls amplified",N2))
 
 ##############################################
 #DNA sample level report
