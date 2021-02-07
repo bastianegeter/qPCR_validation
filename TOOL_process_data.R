@@ -2,37 +2,33 @@
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
-  Settings<-data.frame("Description"=
-                   c("Assay validation level",
-                     "Total number of cycles used in qPCR run",
-                     "Minimum number of positive qPCR replicates for DNA sample to be considered positive (default: 2)",
-                     "Cq value for Limit of Detection (default: determined from standard curve [0])",
-                     "Inhibition Threshold, cycle delay relative to pcrncs (default: 1)",
-                     "Override Inhibition Threshold, just use minimum cycle number that IPC should have attained (default:0 [OFF])",
-                     "IPC threshold: minimum number of replicates that must have been tested for DNA sample to be considered conclusively negative (default:12)",
-                     "IPC threshold2: maximum number of replicates that exhibited inhibition for DNA sample to be considered conclusively negative (default:0)"
-                   ),
-                 "Setting"=c(
-                   2,
-                   55,
-                   1,
-                   30,
-                   1,
-                   37,
-                   12,
-                   4
-                 ),
-                 "shortname"=c(
-                   "AVL",
-                   "N_cycles",
-                   "Pos_minreps",
-                   "LOD_Cq",
-                   "IPC_delay",
-                   "IPC_Cq",
-                   "IPC_minreps",
-                   "IPC_Inh_maxreps"
-                 )
-                 )
+  Settings<-data.frame("shortname"=c(
+    "AVL",
+    "N_cycles",
+    "Pos_minreps",
+    "LOD_Cq",
+    "IPC_delay",
+    "IPC_Cq",
+    "IPC_minreps",
+    "IPC_Inh_maxreps"
+  ),"Description"=c("Assay validation level",
+                    "Total number of cycles used in qPCR run",
+                    "Minimum number of positive qPCR replicates for DNA sample to be considered positive (default: 2)",
+                    "Cq value for Limit of Detection (default: determined from standard curve [0])",
+                    "Inhibition Threshold, cycle delay relative to pcrncs (default: 1)",
+                    "Override Inhibition Threshold, just use minimum cycle number that IPC should have attained (default:0 [OFF])",
+                    "IPC threshold: minimum number of replicates that must have been tested for DNA sample to be considered conclusively negative (default:12)",
+                    "IPC threshold2: maximum number of replicates that exhibited inhibition for DNA sample to be considered conclusively negative (default:0)"
+  ), "Setting"=c(
+    2,
+    55,
+    1,
+    30,
+    1,
+    37,
+    12,
+    4
+  ))
   #Read the input data (which would normally be uploaded on the dashboard)
   DF<-read.csv("Data.csv")
 }
@@ -83,10 +79,10 @@ DF<-DF[DF$DNA_Sample!="",]
 
 #only allow "std","pcrnc","extnc","unkn", "fieldnc","pc" in DF$sample_type
 if(sum(
-      DF$sample_type == "std" | DF$sample_type =="pcrnc" | DF$sample_type == "extnc" |
-      DF$sample_type == "unkn" | DF$sample_type == "fieldnc" | DF$sample_type == "pc"
-      )!=nrow(DF)
-   ) stop("sample_type must be one of: std, pcrnc, extnc, unkn, fieldnc, pc")
+  DF$sample_type == "std" | DF$sample_type =="pcrnc" | DF$sample_type == "extnc" |
+  DF$sample_type == "unkn" | DF$sample_type == "fieldnc" | DF$sample_type == "pc"
+)!=nrow(DF)
+) stop("sample_type must be one of: std, pcrnc, extnc, unkn, fieldnc, pc")
 
 #split DF by sample type for later
 DFlist<-split(DF,DF$sample_type)
