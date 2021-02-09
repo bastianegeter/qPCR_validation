@@ -3,7 +3,6 @@
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
   Settings<-data.frame("shortname"=c(
-    "AVL",
     "N_cycles",
     "Pos_minreps",
     "LOD_Cq",
@@ -11,16 +10,14 @@ if(!is.element("SHINY",ls())){
     "IPC_Cq",
     "IPC_minreps",
     "IPC_Inh_maxreps"
-  ),"Description"=c("Assay validation level",
-                    "Total number of cycles used in qPCR run",
+  ),"Description"=c("Total number of cycles used in qPCR run",
                     "Minimum number of positive qPCR replicates for DNA sample to be considered positive (default: 2)",
                     "Cq value for Limit of Detection (default: determined from standard curve [0])",
-                    "Inhibition Threshold, cycle delay relative to pcrncs (default: 1)",
-                    "Override Inhibition Threshold, just use minimum cycle number that IPC should have attained (default:0 [OFF])",
-                    "IPC threshold: minimum number of replicates that must have been tested for DNA sample to be considered conclusively negative (default:12)",
-                    "IPC threshold2: maximum number of replicates that exhibited inhibition for DNA sample to be considered conclusively negative (default:0)"
+                    "Inhibition cycle delay relative to pcrncs (default: 1)",
+                    "Override cycle delay, just use minimum cycle number that IPC should have attained (default:0 [OFF])",
+                    "Minimum number of IPC replicates that must have been tested for a DNA sample to be considered conclusively negative (default:12)",
+                    "Maximum number of IPC replicates that may have been inhibited for a DNA sample to be considered conclusively negative (default:0)"
   ), "Setting"=c(
-    2,
     55,
     1,
     30,
