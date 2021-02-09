@@ -46,7 +46,8 @@ if(!is.element("SHINY",ls())){
     "Has the probability of detecting a target species at a site been calculated?",
     "Has the number of water samples needed to achieve reliable detection from a site been calculated?",
     "Has the number of water samples needed to estimate probability of species absence given negative results from a site been calculated?",
-    "Has the number of qPCR replicates needed to achieve reliable detection in an eDNA sample been calculated?"
+    "Has the number of qPCR replicates needed to achieve reliable detection in an eDNA sample been calculated?",
+    "Have seasonal effects been taken into account?"
   ), Level_of_Confidence=c(
     "Low",
     "Low",
@@ -60,8 +61,9 @@ if(!is.element("SHINY",ls())){
     "High",
     "High",
     "High",
+    "High",
     "High"
-  ), user_input=c(1,1,1,1,1,1,1,1,1,1,0,0,0)
+  ), user_input=c(1,1,1,1,1,1,1,1,1,1,0,0,0,0)
   )
 }
 
@@ -79,6 +81,8 @@ colNames<-c("Plate","Well","Sample_Type","DNA_Sample","Replicate","Target_Cq","I
 #add readme to github
 #add fieldncs to tests
 #add instruction for Sampling_Point for non-field controls
+#change interp of "weak" from inconclusive to tenative
+#change wording to be unambiguous for interp DF2
 
 
 ##############################################
