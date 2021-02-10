@@ -83,6 +83,7 @@ colNames<-c("Plate","Well","Sample_Type","DNA_Sample","Replicate","Target_Cq","I
 #add instruction for Sampling_Point for non-field controls
 #change interp of "weak" from inconclusive to tenative
 #change wording to be unambiguous for interp DF2
+#add internal extraction control
 
 
 ##############################################
