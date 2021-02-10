@@ -81,11 +81,13 @@ colNames<-c("Plate","Well","Sample_Type","DNA_Sample","Replicate","Target_Cq","I
 #change interp of "weak" from inconclusive to tenative
 #change wording to be unambiguous for interp DF2
 #add internal extraction control
+#add check for one plate only
 
 
 ##############################################
 
 #step1 - formatting cols
+DF$Plate<-as.character(DF$Plate)
 DF$Sample_Type<-as.character(DF$Sample_Type)
 DF$Sampling_Point<-as.character(DF$Sampling_Point)
 DF$Extraction_Batch<-as.character(DF$Extraction_Batch)
@@ -192,25 +194,25 @@ DF$interp1[which(DF$LOD_threshold=="PASSED" & DF$IPC_threshold=="FAILED")] <-"po
 
 DF$interp1[which(DF$LOD_threshold=="NO DETECTABLE CURVE" & DF$IPC_threshold=="PASSED")] <-"negative"
 DF$interp1[which(DF$LOD_threshold=="NO DETECTABLE CURVE" & 
-                   DF$IPC_threshold=="IPC NOT USED")] <-"not detected, inhibition not tested"
+                   DF$IPC_threshold=="IPC NOT USED")] <-"Inconclusive: not detected, inhibition not tested"
 
 DF$interp1[which(DF$LOD_threshold=="NO DETECTABLE CURVE" & 
                    DF$IPC_threshold!="PASSED" & 
-                   DF$IPC_threshold!="IPC NOT USED")] <-"not detected, PCR inhibited"
+                   DF$IPC_threshold!="IPC NOT USED")] <-"Inconclusive: not detected, PCR inhibited"
 
 DF$interp1[which(DF$LOD_threshold!="NO DETECTABLE CURVE" & 
                    DF$LOD_threshold!="PASSED" &
-                   DF$IPC_threshold=="PASSED")] <-"weak signal below LOD, no inhibition observed"
-
-DF$interp1[which(DF$LOD_threshold!="NO DETECTABLE CURVE" & 
-                   DF$LOD_threshold!="PASSED" &
-                   DF$IPC_threshold!="PASSED" &
-                   DF$IPC_threshold=="IPC NOT USED")] <-"weak signal below LOD, inhibition not tested"
+                   DF$IPC_threshold=="PASSED")] <-"Tentative: weak signal below LOD, no inhibition observed"
 
 DF$interp1[which(DF$LOD_threshold!="NO DETECTABLE CURVE" & 
                    DF$LOD_threshold!="PASSED" &
                    DF$IPC_threshold!="PASSED" &
-                   DF$IPC_threshold!="IPC NOT USED")] <-"weak signal below LOD, inhibition observed"
+                   DF$IPC_threshold=="IPC NOT USED")] <-"Tentative: weak signal below LOD, inhibition not tested"
+
+DF$interp1[which(DF$LOD_threshold!="NO DETECTABLE CURVE" & 
+                   DF$LOD_threshold!="PASSED" &
+                   DF$IPC_threshold!="PASSED" &
+                   DF$IPC_threshold!="IPC NOT USED")] <-"Tentative: weak signal below LOD, PCR inhibited"
 
 
 #INTERP2
@@ -269,19 +271,18 @@ DF1<-DF[,colNames]
 #DNA sample level report
 
 #create dummy samples to ensure all categories are present
-dummydf<-data.frame(DNA_Sample=paste("dummygg43266tahte6ytau",1:11),
+dummydf<-data.frame(DNA_Sample=paste("dummygg43266tahte6ytau",1:10),
                     Interpretation=c("negative",
                                "Inconclusive: PCR negative contaminated",
-                               "Inconclusive: negative, PCR inhibited",
-                               "not detected, PCR inhibited",
-                               "not detected, inhibition not tested",
-                               "weak signal below LOD, inhibition not tested",
-                               "weak signal below LOD, inhibition observed",
-                               "weak signal below LOD, no inhibition observed",
-                               "positive",
+                               "Inconclusive: not detected, PCR inhibited",
+                               "Inconclusive: not detected, inhibition not tested",
                                "Inconclusive: extraction batch contaminated",
-                               "Inconclusive: not all positive controls amplified"))
-
+                               "Inconclusive: not all positive controls amplified",
+                               "Tentative: weak signal below LOD, inhibition not tested",
+                               "Tentative: weak signal below LOD, PCR inhibited",
+                               "Tentative: weak signal below LOD, no inhibition observed",
+                               "positive"
+                               ))
 DFtemp<-rbind(DF[,c("DNA_Sample","Interpretation")],dummydf)
 
 DF2<-as.data.frame.matrix(table(DFtemp$DNA_Sample,DFtemp$Interpretation))
@@ -291,7 +292,7 @@ DF2<-DF2[-grep("dummygg43266tahte6ytau",DF2$DNA_Sample),]
 #add back sample type
 DF2$Sample_Type<-DF[match(DF2$DNA_Sample,DF$DNA_Sample),"Sample_Type"]
 #add n reps
-DF2$nreps<-rowSums(DF2[,1:11])
+DF2$nReps<-rowSums(DF2[,1:10])
 
 #interp positives
 DF2$interp_pos<-"NOT_DONE"
@@ -306,8 +307,8 @@ for(i in 1:nrow(DF2)){
      & DF2$`Inconclusive: extraction batch contaminated`[i]==0
      & DF2$positive[i]>=getset(Settings,"Pos_minreps")) {
     DF2$interp_pos[i]<-
-    paste0("Conclusive: ",DF2$positive[i], " of ",DF2$nreps[i],
-          if(DF2$nreps[i]==1) " replicate" else " replicates",
+    paste0("positive: ",DF2$positive[i], " of ",DF2$nReps[i],
+          if(DF2$nReps[i]==1) " replicate" else " replicates",
           " positive and passing all controls (min=", getset(Settings,"Pos_minreps"),")")
   }
   
@@ -316,77 +317,99 @@ for(i in 1:nrow(DF2)){
      & DF2$positive[i]<getset(Settings,"Pos_minreps")
      & DF2$positive[i]>0) {
     DF2$interp_pos[i]<-
-      paste0("Inconclusive: less than ", getset(Settings,"Pos_minreps"),
-             " replicates positive and passing all controls, suggest further analysis")
+      paste0("Tentative: fewer than ", getset(Settings,"Pos_minreps"),
+             " replicates positive and passing all controls")
   }
 }
 
-####
+####interp conclusive negatives
 for(i in 1:nrow(DF2)){
   
-  if(DF2$interp_pos[i]=="NOT_DONE" 
-                       & DF2$negative[i]==DF2$nreps[i]) {
-    DF2$interp_pos[i]<-"Conclusive: all replicates negative without inhibition"
-  }
+    if(DF2$interp_pos[i]=="NOT_DONE" 
+                       & DF2$negative[i]==DF2$nReps[i]) {
+     DF2$interp_pos[i]<-"negative: all replicates negative and without inhibition"
+    }
 }
 
-####
+####interp weak signals
+DF2$inhib_reps_tested=0
 for(i in 1:nrow(DF2)){
+  #count n reps that inhibition was tested in
+  temp<-DF1[DF1$DNA_Sample==DF2$DNA_Sample[i],]
+  DF2$inhib_reps_tested[i]<-nrow(temp[temp$IPC_Cq!=-1,])
   
-  sumweak<-sum(DF2[i,grep("weak*",colnames(DF2))])
+  sumweak<-sum(DF2[i,grep("Tentative*",colnames(DF2))])
   
   if(DF2$interp_pos[i]=="NOT_DONE" & sumweak>0) {
-    DF2$interp_pos[i]<-paste0("Inconclusive, weak signal in ", sumweak, 
+    DF2$interp_pos[i]<-paste0("Tentative: weak signal in ", sumweak, 
                               if(sumweak==1) " replicate" else " replicates")
   }
     
     if(DF2$interp_pos[i]=="NOT_DONE" & sumweak==0
-       & DF2$`not detected, PCR inhibited`[i]==0
-       & DF2$nreps[i]-DF2$`not detected, inhibition not tested`[i]<=getset(Settings,"IPC_minreps")) {
-      DF2$interp_pos[i]<-paste0("Inconclusive, not detected but inhibition was not tested in ", 
-                                DF2$`not detected, inhibition not tested`[i],
-                                if(DF2$`not detected, inhibition not tested`[i]==1) " replicate" else " replicates",
+       & DF2$`Inconclusive: not detected, PCR inhibited`[i]==0
+       & DF2$nReps[i]-DF2$`Inconclusive: not detected, inhibition not tested`[i]>=getset(Settings,"IPC_minreps")
+       ) {
+      
+      DF2$interp_pos[i]<-paste0("Inconclusive: not detected but inhibition was only tested in ", 
+                                DF2$inhib_reps_tested[i],
+                                if(DF2$inhib_reps_tested[i]==1) " replicate" else " replicates",
       " (min=",getset(Settings,"IPC_minreps"),")")
     }
       
       if(DF2$interp_pos[i]=="NOT_DONE" & sumweak==0
-         & DF2$`not detected, PCR inhibited`[i]==0
-         & DF2$nreps[i]-DF2$`not detected, inhibition not tested`[i]>getset(Settings,"IPC_minreps")) {
-           DF2$interp_pos[i]<-paste0("Conclusive: Note that ", 
+         & DF2$`Inconclusive: not detected, PCR inhibited`[i]==0
+         & DF2$nReps[i]-DF2$`Inconclusive: not detected, inhibition not tested`[i]<getset(Settings,"IPC_minreps")) {
+           DF2$interp_pos[i]<-paste0("negative: ", 
                                      DF2$negative[i]," replicates were negative, ",
-                                     DF2$`not detected, PCR inhibited`[i]," showed inhibition and ",
-                                     DF2$`not detected, inhibition not tested`[i],
-                                     if(DF2$`not detected, inhibition not tested`[i]==1) " was" else " were",
-                                     " not tested for inhibition")
+                                     DF2$`Inconclusive: not detected, PCR inhibited`[i]," showed inhibition max=(", 
+                                     getset(Settings,"IPC_Inh_maxreps"),") and ",
+                                     DF2$`Inconclusive: not detected, inhibition not tested`[i],
+                                     if(DF2$`Inconclusive: not detected, inhibition not tested`[i]==1) " was" else " were",
+                                     " not tested for inhibition (min=", getset(Settings,"IPC_minreps"),")")
       }
 }
 
-####
+####interp inhibition sample thresholds
 for(i in 1:nrow(DF2)){
   
-  if(DF2$interp_pos[i]=="NOT_DONE" & DF2$`not detected, PCR inhibited`[i]<=getset(Settings,"IPC_Inh_maxreps")){
-    DF2$interp_pos[i]<-paste0("Conclusive Negative: Note that ",DF2$negative[i], 
-                              if(DF2$negative[i]==1) " replicate" else " replicates",
-                              " were negative, ", DF2$`not detected, PCR inhibited`[i]," showed inhibition (min=",
-                              getset(Settings,"IPC_minreps"),") and ",DF2$`not detected, inhibition not tested`[i],
-                              if(DF2$`not detected, inhibition not tested`[i]==1) " was" else " were",
-                              " not tested for inhibition")
+  if(DF2$interp_pos[i]=="NOT_DONE" & DF2$`Inconclusive: not detected, PCR inhibited`[i]<=getset(Settings,"IPC_Inh_maxreps")){
+    DF2$interp_pos[i]<-paste0("negative: ", 
+                              DF2$negative[i]," replicates were negative, ",
+                              DF2$`Inconclusive: not detected, PCR inhibited`[i]," showed inhibition max=(", 
+                              getset(Settings,"IPC_Inh_maxreps"),") and ",
+                              DF2$`Inconclusive: not detected, inhibition not tested`[i],
+                              if(DF2$`Inconclusive: not detected, inhibition not tested`[i]==1) " was" else " were",
+                              " not tested for inhibition (min=", getset(Settings,"IPC_minreps"),")")
   }
   
-  if(DF2$interp_pos[i]=="NOT_DONE" & DF2$`not detected, PCR inhibited`[i]<=getset(Settings,"IPC_Inh_maxreps")){
-    DF2$interp_pos[i]<-paste0("Conclusive Negative: Note that ",DF2$negative[i], 
-                              if(DF2$negative[i]==1) " replicate" else " replicates",
-                              " were negative, ", DF2$`not detected, PCR inhibited`[i]," showed inhibition (max=",
-                              getset(Settings,"IPC_Inh_maxreps"),") and ",DF2$`not detected, inhibition not tested`[i],
-                              if(DF2$`not detected, inhibition not tested`[i]==1) " was" else " were",
+  if(DF2$interp_pos[i]=="NOT_DONE" & DF2$`Inconclusive: not detected, PCR inhibited`[i]>getset(Settings,"IPC_Inh_maxreps")){
+    DF2$interp_pos[i]<-paste0("Inconclusive: not detected but ", DF2$`Inconclusive: not detected, PCR inhibited`[i],
+                              " showed inhibition (max=",
+                              getset(Settings,"IPC_Inh_maxreps"),") and ",DF2$`Inconclusive: not detected, inhibition not tested`[i],
+                              if(DF2$`Inconclusive: not detected, inhibition not tested`[i]==1) " was" else " were",
                               " not tested for inhibition (min=",getset(Settings,"IPC_minreps"),")")
   }
 }
 
-DF2$Interpretation<-DF2$interp_pos
+####overwrite not detected and neg results if not all pcs amped
+if(sum(DF2$`Inconclusive: not all positive controls amplified`)!=0){
+  
+  DF2$interp_pos[which(grepl("Tentative:*",DF2$interp_pos))]<-
+    paste0(DF2$interp_pos[which(grepl("Tentative:*",DF2$interp_pos))]," (also not all positive controls amplified)")
+  
+  DF2$interp_pos[which(grepl("negative*",DF2$interp_pos))]<-"Inconclusive: not all positive controls amplified"
+  
+  DF2$interp_pos[which(grepl("Inconclusive: not*",DF2$interp_pos))]<-"Inconclusive: not all positive controls amplified"
+}
+
+DF2$Interpretation<-stringr::str_split(DF2$interp_pos,": ",simplify = T)[,1]
+DF2$Notes<-stringr::str_split(DF2$interp_pos,": ",simplify = T)[,2]
+DF2$nPos<-DF2$positive
+DF2$nIPC<-DF2$inhib_reps_tested
+DF2$nFailedIPC<-rowSums(DF2[,grep("*PCR inhibited*",colnames(DF2))])
 
 #final table 2 to report
-DF2<-DF2[,c("DNA_Sample","Sample_Type","nreps","Interpretation")]
+DF2<-DF2[,c("DNA_Sample","Sample_Type","nReps","nPos","nIPC","nFailedIPC","Interpretation","Notes")]
 
 ##############################################
 #Sampling point level report
@@ -395,6 +418,30 @@ DF3<-DF2
 #add back sampling points
 DF3$Sampling_Point<-DF1[match(DF3$DNA_Sample,DF1$DNA_Sample),"Sampling_Point"]
 DF3<-as.data.frame.matrix(table(DF3$Sampling_Point,DF3$Interpretation))
+DF3$Interpretation<-"NOT_DONE"
+DF$Notes<-""
+
+if(val_scale=="Low"){
+  DF3$Interpretation[which(DF3$positive>0 | DF3$Tentative>0)]<-"Tentative"
+  DF3$Notes[which(DF3$positive>0 | DF3$Tentative>0)]<-"Suggest sequencing or further assay validation"
+  
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
+                           & DF3$Inconclusive==0 & DF3$negative>0)]<-"Negative"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
+                  & DF3$Inconclusive==0 & DF3$negative>0)]<-"Cannot presume absence"
+  
+}
+
+if(val_scale=="Medium"){
+  DF3$Interpretation[which(DF3$positive>0 | DF3$Tentative>0)]<-"Tentative"
+  DF3$Notes[which(DF3$positive>0 | DF3$Tentative>0)]<-"Suggest seqeuncing or further assay validation"
+  
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
+                           & DF3$Inconclusive==0 & DF3$negative>0)]<-"Negative"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
+                  & DF3$Inconclusive==0 & DF3$negative>0)]<-"Cannot presume absence"
+  
+}
 
 #dev notes.
 #validation 
