@@ -12,6 +12,7 @@
 #add internal extraction control
 #make summary table for front page
 #code stop warning for below Low
+#change validation from hard coded numbers to something else
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
