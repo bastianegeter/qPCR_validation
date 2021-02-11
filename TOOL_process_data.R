@@ -20,10 +20,10 @@ if(!is.element("SHINY",ls())){
   ), "Setting"=c(
     55,
     1,
-    30,
-    1,
+    55,
+    5,
     37,
-    12,
+    10,
     4
   ))
   #Read the input data (which would normally be uploaded on the dashboard)
@@ -103,19 +103,43 @@ DF$IPC_Cq[is.na(DF$IPC_Cq)]<-0
 #remove NA rows
 DF<-DF[DF$DNA_Sample!="",]
 
+#make a warnings table for the report
+warning_tab<-data.frame(warning=rep("",10))
+warning_tab$warning<-as.character(warning_tab$warning)
+warning_count=1
+
 #some columns must be filled
-if(nrow(DF[DF$Sampling_Point=="",])!=nrow(DF)) stop("All replicates must have a Sampling_Point") #must all have something
-if(nrow(DF[DF$Replicate=="",])!=nrow(DF)) stop("All replicates must be assigned Replicate id") #must all have something
+if(nrow(DF[DF$Sampling_Point=="",])>0) {
+  warning("All replicates must have a Sampling_Point") #must all have something
+  warning_tab$warning[warning_count]<-"All replicates must have a Sampling_Point. Fix and rerun."
+  warning_count<-warning_count+1
+}
+  
+if(nrow(DF[DF$Replicate=="",])>0) {#must all have something
+  warning("All replicates must be assigned Replicate id") #must all have something
+  warning_tab$warning[warning_count]<-"All replicates must be assigned Replicate id. Fix and rerun."
+  warning_count<-warning_count+1
+}
+
+
 #DNA_sample*replicate must be unique
 ids<-paste0(DF$DNA_Sample,DF$Replicate)
-if(length(unique(ids))!=length(ids)) stop("Duplicate DNA_Sample:Replicate found")
+if(length(unique(ids))!=length(ids)) {
+  warning("Duplicate DNA_Sample:Replicate found, these must be unique") #must all have something
+  warning_tab$warning[warning_count]<-"Duplicate DNA_Sample:Replicate found, these must be unique. Fix and rerun."
+  warning_count<-warning_count+1
+}
 
 #only allow "std","pcrnc","extnc","unkn", "fieldnc","pc" in DF$Sample_Type
 if(sum(
   DF$Sample_Type == "std" | DF$Sample_Type =="pcrnc" | DF$Sample_Type == "extnc" |
   DF$Sample_Type == "unkn" | DF$Sample_Type == "fieldnc" | DF$Sample_Type == "pc"
 )!=nrow(DF)
-) stop("Sample_Type must be one of: std, pcrnc, extnc, unkn, fieldnc, pc")
+) {
+  warning("Sample_Type must be one of: std, pcrnc, extnc, unkn, fieldnc, pc") #must all have something
+  warning_tab$warning[warning_count]<-"Sample_Type must be one of: std, pcrnc, extnc, unkn, fieldnc, pc. Fix and rerun."
+  warning_count<-warning_count+1 
+}
 
 #split DF by sample type for later
 DFlist<-split(DF,DF$Sample_Type)
@@ -157,12 +181,32 @@ DF$IPC_threshold[DF$IPC_threshold=="NOT_DONE"]<-"PASSED"
 DF$LOD_threshold<-"NOT_DONE"
 DF$LOD_threshold[which(DF$Target_Cq==0)]<-"NO DETECTABLE CURVE"
 
+#get R2 (if stds present)
+if(nrow(DF[DF$Sample_Type=="std",])>0) {
+  stds<-DFlist$std
+  stdspos<-stds[stds$Target_Cq>0,]
+  stdspos$log<-log10(stdspos$Std_Conc)
+  rsq <- function (x, y) cor(x, y) ^ 2
+  R2<-rsq(stdspos$Target_Cq,stdspos$log)
+  Slope<-lm(stdspos$Target_Cq~stdspos$log)[['coefficients']][2]
+  Efficiency<-(10^(-1/Slope)-1)*100
+} else {
+  R2<-NA
+  warning("R squared not calculated as there were no stds included") #must all have something
+  warning_tab$warning[warning_count]<-"R squared not calculated as there were no stds included."
+  warning_count<-warning_count+1 
+  Efficiency<-NA
+  warning("Efficiency not calculated as there were no stds included") #must all have something
+  warning_tab$warning[warning_count]<-"Efficiency not calculated as there were no stds included."
+  warning_count<-warning_count+1 
+}
+
 #getting LOD
 if(getset(Settings,"LOD_Cq")==0){
   #get LOD from stds
   stds<-DFlist$std
   stdspos<-stds[stds$Target_Cq>0,]
-  stdspos_agg<-aggregate(stdspos$Target_Cq,by = list(stdspos$std_conc),FUN=length)
+  stdspos_agg<-aggregate(stdspos$Target_Cq,by = list(stdspos$Std_Conc),FUN=length)
   #Choose lowest conc that had n-1 reps working - why? Using a 95% rule, 
   #but leniently 1/2, 2/3, 3/4, 5/6, 6/7, 7/8, 8/9,9/10,10/11... 
   #note this will break down at >19 replicates...not very likely!
@@ -173,9 +217,12 @@ if(getset(Settings,"LOD_Cq")==0){
   min_conc_pass<-min(stdspos_agg$Group.1[which(stdspos_agg$threshold=="PASS")])
   
   #if lowest concs passed, cannot use this LOD, revert to cycle number
-  if(min(stds$std_conc)==min_conc_pass) {
-    message("Limit of detection not reached (all stds had >=95% detection success, 
-            not applying LOD threshold, suggest applying manual LOD value")
+  if(min(stds$Std_Conc)==min_conc_pass) {
+    warning("Limit of detection not reached (all stds had >=95% detection success, 
+            not applying LOD threshold, suggest applying a LOD_Cq setting") #must all have something
+    warning_tab$warning[warning_count]<-"Limit of detection not reached (all stds had >=95% detection success, 
+            not applying LOD threshold, suggest applying a LOD_Cq setting"
+    warning_count<-warning_count+1
     LOD_Cq<-getset(Settings,"N_cycles")
   } else LOD_Cq<-max(stdspos[stdspos$std_conc==min_conc_pass,"Target_Cq"])
 } else {
@@ -434,7 +481,7 @@ if(val_scale=="Low"){
 
 if(val_scale=="Medium"){
   DF3$Interpretation[which(DF3$positive>0 | DF3$Tentative>0)]<-"Tentative"
-  DF3$Notes[which(DF3$positive>0 | DF3$Tentative>0)]<-"Suggest seqeuncing or further assay validation"
+  DF3$Notes[which(DF3$positive>0 | DF3$Tentative>0)]<-"Suggest sequencing or further assay validation"
   
   DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
                            & DF3$Inconclusive==0 & DF3$negative>0)]<-"Negative"
@@ -451,11 +498,26 @@ if(val_scale=="Medium"){
   #can talk about 
 #high: no false pos, no false neg
 
+#tidy final warning tab
+warning_tab<-warning_tab[warning_tab$warning!="",,drop=F]
 
 ##############################################
-#This DF definition is important - this is what shiny will take for the pdf output, along with the colNames vector for column headers
-#Also important that the name "DF" is not changed
-DF<-cbind(DF,data.frame("Interpretation"=Int))
+#OUTPUTS FOR REPORT
+#Summary of results
+paste("Assay validation level:", val_scale)
+paste("Did any qPCR negative controls (pcrnc) indicate contamination:",if(nrow(DFpcrnc)>0) "Yes" else "No")
+paste("Did any extraction negative controls (extnc) indicate contamination:", if(nrow(DFextnc)>0) "Yes" else "No") 
+paste("Did any field negative controls (fieldnc) indicate contamination:", if(nrow(DFfieldnc)>0) "Yes" else "No")   
+paste("Did all positive control replicates (pc) amplify:", 
+      if(nrow(DF1[DF1$Sample_Type=="pc",])==nrow(DFpc)) "Yes" else "No") 
+paste("Were standards included on the plate:", if(nrow(DF1[DF1$Sample_Type=="std",])>0) "Yes" else "No") 
+paste("Rsquare:",round(R2,digits=3))
+paste0("PCR efficiency: ", round(Efficiency,digits = 1), "%")
+
+DF1
+DF2
+DF3
+warning_tab
 ##############################################
 
 
