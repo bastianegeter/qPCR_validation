@@ -11,6 +11,8 @@
 #add instruction for Sampling_Point for non-field controls
 #add internal extraction control
 #make summary table for front page
+#add LOD to summary
+#add tentative col to DF2
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
@@ -555,9 +557,9 @@ paste("Were standards included on the plate:", if(nrow(DF1[DF1$Sample_Type=="std
 paste("Rsquare:",round(R2,digits=3))
 paste0("PCR efficiency: ", round(Efficiency,digits = 1), "%")
 
-DF1
-DF2
-DF3
+DF1 # qpcr replicate level
+DF2 # dna sample level
+DF3 # sampling point level
 warning_tab
 ##############################################
 
