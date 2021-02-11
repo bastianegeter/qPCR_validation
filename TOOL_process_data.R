@@ -1,5 +1,16 @@
 #if we're in the dashboard, use the information from there, otherwise upload locally for development purposes
 
+#TODO
+#add setting on whether to use LOD at all
+#add option to use concentration rather than cq value for LOD
+#add fields to write validation of non-default settings
+#if stds on plate, add plot of stds, and add all other samples to plot
+#possibly to be interactive so that can hover over samples to show ids? (guess not for pdf)
+#add readme to github
+#add fieldncs to tests
+#add instruction for Sampling_Point for non-field controls
+#add internal extraction control
+
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
   Settings<-data.frame("shortname"=c(
@@ -20,11 +31,11 @@ if(!is.element("SHINY",ls())){
   ), "Setting"=c(
     55,
     1,
-    55,
+    38,
     5,
-    37,
-    10,
-    4
+    40,
+    1,
+    1
   ))
   #Read the input data (which would normally be uploaded on the dashboard)
   DF<-read.csv("Data.csv")
@@ -69,20 +80,6 @@ if(!is.element("SHINY",ls())){
 colNames<-c("Plate","Well","Sample_Type","DNA_Sample","Replicate","Target_Cq","IPC_Cq",
             "Std_Conc","Sampling_Point","Extraction_Batch","Volume_Water_Processed","Interpretation")
 
-#TODO
-#add setting on whether to use LOD at all
-#add option to use concentration rather than cq value for LOD
-#add fields to write validation of non-default settings
-#if stds on plate, add plot of stds, and add all other samples to plot
-#possibly to be interactive so that can hover over samples to show ids? (guess not for pdf)
-#add readme to github
-#add fieldncs to tests
-#add instruction for Sampling_Point for non-field controls
-#change interp of "weak" from inconclusive to tenative
-#change wording to be unambiguous for interp DF2
-#add internal extraction control
-#add check for one plate only
-
 
 ##############################################
 
@@ -104,9 +101,16 @@ DF$IPC_Cq[is.na(DF$IPC_Cq)]<-0
 DF<-DF[DF$DNA_Sample!="",]
 
 #make a warnings table for the report
-warning_tab<-data.frame(warning=rep("",10))
+warning_tab<-data.frame(warning=rep("",20))
 warning_tab$warning<-as.character(warning_tab$warning)
 warning_count=1
+
+#check that only one plate
+if(unique(DF$Plate)>1) {
+  warning("Only one plate can be entered for each analysis") #must all have something
+  warning_tab$warning[warning_count]<-"Only one plate can be entered for each analysis. Fix and rerun."
+  warning_count<-warning_count+1
+}
 
 #some columns must be filled
 if(nrow(DF[DF$Sampling_Point=="",])>0) {
@@ -473,30 +477,53 @@ if(val_scale=="Low"){
   DF3$Notes[which(DF3$positive>0 | DF3$Tentative>0)]<-"Suggest sequencing or further assay validation"
   
   DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
-                           & DF3$Inconclusive==0 & DF3$negative>0)]<-"Negative"
+                           & DF3$negative>0)]<-"Negative"
   DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
-                  & DF3$Inconclusive==0 & DF3$negative>0)]<-"Cannot presume absence"
+                  & DF3$negative>0)]<-"Cannot infer species absence"
   
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
+                           & DF3$Inconclusive>0 & DF3$negative=0)]<-"Inconclusive"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
+                  & DF3$Inconclusive>0 & DF3$negative=0)]<-"See DNA sample and qPCR replicate level tables"
 }
 
 if(val_scale=="Medium"){
-  DF3$Interpretation[which(DF3$positive>0 | DF3$Tentative>0)]<-"Tentative"
-  DF3$Notes[which(DF3$positive>0 | DF3$Tentative>0)]<-"Suggest sequencing or further assay validation"
+  DF3$Interpretation[which(DF3$positive>0)]<-"Positive"
+  DF3$Notes[which(DF3$positive>0)]<-"Species DNA is present"
+  
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative>0)]<-"Tentative"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative>0)]<-"Suggest sequencing or further assay validation"
   
   DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
-                           & DF3$Inconclusive==0 & DF3$negative>0)]<-"Negative"
+                           & DF3$negative>0)]<-"Negative"
   DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
-                  & DF3$Inconclusive==0 & DF3$negative>0)]<-"Cannot presume absence"
+                  & DF3$negative>0)]<-"Cannot infer species absence"
+  
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
+                           & DF3$Inconclusive>0 & DF3$negative==0)]<-"Inconclusive"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
+                  & DF3$Inconclusive>0 & DF3$negative==0)]<-"See DNA sample and qPCR replicate level tables"
   
 }
 
-#dev notes.
-#validation 
-#low: false pos possible and false neg possible
-  #cannot say anything really
-#medium: no false pos, possible false neg
-  #can talk about 
-#high: no false pos, no false neg
+if(val_scale=="High"){
+  DF3$Interpretation[which(DF3$positive>0)]<-"Positive"
+  DF3$Notes[which(DF3$positive>0)]<-"Species DNA is present"
+  
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative>0)]<-"Tentative"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative>0)]<-"Suggest sequencing"
+  
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
+                           & DF3$negative>0)]<-"Negative"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
+                  & DF3$negative>0)]<-"Species is not present"
+  
+  DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
+                           & DF3$Inconclusive>0 & DF3$negative==0)]<-"Inconclusive"
+  DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
+                  & DF3$Inconclusive>0 & DF3$negative==0)]<-"See DNA sample and qPCR replicate level tables"
+  
+}
 
 #tidy final warning tab
 warning_tab<-warning_tab[warning_tab$warning!="",,drop=F]
