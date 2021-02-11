@@ -11,10 +11,7 @@
 #add instruction for Sampling_Point for non-field controls
 #add internal extraction control
 #make summary table for front page
-#add LOD to summary
 #add tentative col to DF2
-#code stop warning for below Low
-#change validation from hard coded numbers to something else
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
@@ -160,11 +157,19 @@ getset<-function(Settingsdf,setting_shortname){
 
 ##############################################
 ##Put assay on validation scale (low,medium,high)
-if(sum(validation[validation$Level_of_Confidence=="Low","user_input"])<5) {
+if(sum(validation[validation$Level_of_Confidence=="Low","user_input"])<
+   length(validation[validation$Level_of_Confidence=="Low","user_input"])) {
   val_scale<-"Not usable"
-} else if(sum(validation[validation$Level_of_Confidence=="Medium","user_input"])<3) {
+  
+  warning("Assay has not passed the minimum criteria for use") ##FAIL QC##
+  warning_tab$warning[warning_count]<-"Assay has not passed the minimum criteria for use."
+  warning_count<-warning_count+1 
+  
+} else if(sum(validation[validation$Level_of_Confidence=="Medium","user_input"])<
+          length(validation[validation$Level_of_Confidence=="Medium","user_input"])) {
   val_scale<-"Low"
-} else if(sum(validation[validation$Level_of_Confidence=="High","user_input"])<5) {
+} else if(sum(validation[validation$Level_of_Confidence=="High","user_input"])<
+          length(validation[validation$Level_of_Confidence=="High","user_input"])) {
   val_scale<-"Medium"
 } else val_scale<-"High"
 
@@ -558,6 +563,7 @@ paste("Did all positive control replicates (pc) amplify:",
 paste("Were standards included on the plate:", if(nrow(DF1[DF1$Sample_Type=="std",])>0) "Yes" else "No") 
 paste("Rsquare:",round(R2,digits=3))
 paste0("PCR efficiency: ", round(Efficiency,digits = 1), "%")
+paste("Limit of detection cycle threshold:", LOD_Cq)
 
 DF1 # qpcr replicate level
 DF2 # dna sample level
