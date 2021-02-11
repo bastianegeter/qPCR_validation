@@ -10,6 +10,7 @@
 #add fieldncs to tests
 #add instruction for Sampling_Point for non-field controls
 #add internal extraction control
+#make summary table for front page
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
@@ -194,6 +195,19 @@ if(nrow(DF[DF$Sample_Type=="std",])>0) {
   R2<-rsq(stdspos$Target_Cq,stdspos$log)
   Slope<-lm(stdspos$Target_Cq~stdspos$log)[['coefficients']][2]
   Efficiency<-(10^(-1/Slope)-1)*100
+  
+  if(R2<0.985) {
+    warning("R squared below recommended value. See glossary.") #must all have something
+    warning_tab$warning[warning_count]<-"R squared below recommend value. See glossary."
+    warning_count<-warning_count+1 
+  }
+  
+  if(Efficiency<90 | Efficiency>110) {
+    warning("Efficiency outside recommended range. See glossary.") #must all have something
+    warning_tab$warning[warning_count]<-"Efficiency outside recommended range. See glossary."
+    warning_count<-warning_count+1 
+  }
+  
 } else {
   R2<-NA
   warning("R squared not calculated as there were no stds included") #must all have something
@@ -470,7 +484,7 @@ DF3<-DF2
 DF3$Sampling_Point<-DF1[match(DF3$DNA_Sample,DF1$DNA_Sample),"Sampling_Point"]
 DF3<-as.data.frame.matrix(table(DF3$Sampling_Point,DF3$Interpretation))
 DF3$Interpretation<-"NOT_DONE"
-DF$Notes<-""
+DF3$Notes<-""
 
 if(val_scale=="Low"){
   DF3$Interpretation[which(DF3$positive>0 | DF3$Tentative>0)]<-"Tentative"
@@ -482,9 +496,9 @@ if(val_scale=="Low"){
                   & DF3$negative>0)]<-"Cannot infer species absence"
   
   DF3$Interpretation[which(DF3$positive==0 & DF3$Tentative==0 
-                           & DF3$Inconclusive>0 & DF3$negative=0)]<-"Inconclusive"
+                           & DF3$Inconclusive>0 & DF3$negative==0)]<-"Inconclusive"
   DF3$Notes[which(DF3$positive==0 & DF3$Tentative==0 
-                  & DF3$Inconclusive>0 & DF3$negative=0)]<-"See DNA sample and qPCR replicate level tables"
+                  & DF3$Inconclusive>0 & DF3$negative==0)]<-"See DNA sample and qPCR replicate level tables"
 }
 
 if(val_scale=="Medium"){
