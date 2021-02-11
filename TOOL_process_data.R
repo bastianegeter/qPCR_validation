@@ -13,6 +13,8 @@
 #make summary table for front page
 #add LOD to summary
 #add tentative col to DF2
+#code stop warning for below Low
+#change validation from hard coded numbers to something else
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
@@ -108,28 +110,28 @@ warning_tab<-data.frame(warning=rep("",20))
 warning_tab$warning<-as.character(warning_tab$warning)
 warning_count=1
 
-#check that only one plate
+#check that only one plate ##FAIL QC##
 if(unique(DF$Plate)>1) {
   warning("Only one plate can be entered for each analysis") #must all have something
   warning_tab$warning[warning_count]<-"Only one plate can be entered for each analysis. Fix and rerun."
   warning_count<-warning_count+1
 }
 
-#some columns must be filled
+#some columns must be filled ##FAIL QC##
 if(nrow(DF[DF$Sampling_Point=="",])>0) {
   warning("All replicates must have a Sampling_Point") #must all have something
   warning_tab$warning[warning_count]<-"All replicates must have a Sampling_Point. Fix and rerun."
   warning_count<-warning_count+1
 }
   
-if(nrow(DF[DF$Replicate=="",])>0) {#must all have something
+if(nrow(DF[DF$Replicate=="",])>0) { ##FAIL QC##
   warning("All replicates must be assigned Replicate id") #must all have something
   warning_tab$warning[warning_count]<-"All replicates must be assigned Replicate id. Fix and rerun."
   warning_count<-warning_count+1
 }
 
 
-#DNA_sample*replicate must be unique
+#DNA_sample*replicate must be unique ##FAIL QC##
 ids<-paste0(DF$DNA_Sample,DF$Replicate)
 if(length(unique(ids))!=length(ids)) {
   warning("Duplicate DNA_Sample:Replicate found, these must be unique") #must all have something
@@ -137,7 +139,7 @@ if(length(unique(ids))!=length(ids)) {
   warning_count<-warning_count+1
 }
 
-#only allow "std","pcrnc","extnc","unkn", "fieldnc","pc" in DF$Sample_Type
+#only allow "std","pcrnc","extnc","unkn", "fieldnc","pc" in DF$Sample_Type ##FAIL QC##
 if(sum(
   DF$Sample_Type == "std" | DF$Sample_Type =="pcrnc" | DF$Sample_Type == "extnc" |
   DF$Sample_Type == "unkn" | DF$Sample_Type == "fieldnc" | DF$Sample_Type == "pc"
@@ -199,24 +201,24 @@ if(nrow(DF[DF$Sample_Type=="std",])>0) {
   Efficiency<-(10^(-1/Slope)-1)*100
   
   if(R2<0.985) {
-    warning("R squared below recommended value. See glossary.") #must all have something
+    warning("R squared below recommended value. See glossary.") 
     warning_tab$warning[warning_count]<-"R squared below recommend value. See glossary."
     warning_count<-warning_count+1 
   }
   
   if(Efficiency<90 | Efficiency>110) {
-    warning("Efficiency outside recommended range. See glossary.") #must all have something
+    warning("Efficiency outside recommended range. See glossary.") 
     warning_tab$warning[warning_count]<-"Efficiency outside recommended range. See glossary."
     warning_count<-warning_count+1 
   }
   
 } else {
   R2<-NA
-  warning("R squared not calculated as there were no stds included") #must all have something
+  warning("R squared not calculated as there were no stds included") 
   warning_tab$warning[warning_count]<-"R squared not calculated as there were no stds included."
   warning_count<-warning_count+1 
   Efficiency<-NA
-  warning("Efficiency not calculated as there were no stds included") #must all have something
+  warning("Efficiency not calculated as there were no stds included") 
   warning_tab$warning[warning_count]<-"Efficiency not calculated as there were no stds included."
   warning_count<-warning_count+1 
 }
