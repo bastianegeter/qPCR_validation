@@ -11,6 +11,7 @@
 #add instruction for Sampling_Point for non-field controls
 #add internal extraction control
 #make summary table for front page
+#code stop warning for below Low
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
