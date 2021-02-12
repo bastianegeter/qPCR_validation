@@ -12,6 +12,10 @@
 #add internal extraction control
 #make summary table for front page
 #add tentative col to DF2
+#change IPC_Inh_maxreps default to nreps
+#check final rules, sampling_point level
+#shiny page should alwasy start with defaults
+#each dna sample can only have one sample type assigned
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
@@ -33,7 +37,7 @@ if(!is.element("SHINY",ls())){
   ), "Setting"=c(
     55,
     1,
-    38,
+    0,
     5,
     40,
     1,
@@ -46,8 +50,8 @@ if(!is.element("SHINY",ls())){
   validation<-data.frame(Metric=c(
     "Was in silico testing conducted and primers shown to amplify the target species?",
     "Were the primers tested on tissue from the target species?",
-    "Was in silico testing conducted and potential crossamplification of non-target species shown to be low?",
-    "Were primers tested on non-target tissue of closely-related potentially co-occuring species?",
+    "Was in silico testing conducted and potential cross-amplification of non-target species shown to be low?",
+    "Were primers tested on non-target tissue of closely-related potentially co-occurring species?",
     "Did the assay successfully detect the target species at a site of known presence?",
     "Did the assay successfully detect the target species at multiple site of known presence?",
     "Did the assay return negative results for the target species at multiple sites of known absence?",
@@ -251,7 +255,7 @@ if(getset(Settings,"LOD_Cq")==0){
             not applying LOD threshold, suggest applying a LOD_Cq setting"
     warning_count<-warning_count+1
     LOD_Cq<-getset(Settings,"N_cycles")
-  } else LOD_Cq<-max(stdspos[stdspos$std_conc==min_conc_pass,"Target_Cq"])
+  } else LOD_Cq<-max(stdspos[stdspos$Std_Conc==min_conc_pass,"Target_Cq"])
 } else {
   LOD_Cq<-getset(Settings,"LOD_Cq") #absolute value from input
 }
