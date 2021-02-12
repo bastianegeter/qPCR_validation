@@ -1,0 +1,346 @@
+---
+title: "TOOL"
+date: '`r format(Sys.Date(), format="%B %d, %Y")`'
+output: 
+  flexdashboard::flex_dashboard:
+    # logo: Kao5.png
+    orientation: rows
+    theme: "lumen"
+    # social: [ "twitter", "facebook", "menu" ]
+    # includes:
+      # after_body: footer.html
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+#"default", "cerulean", "journal", "flatly", "readable", "spacelab", "united", "cosmo", "lumen", "paper", "sandstone", "simplex", "yeti"
+# setwd("D:/1/Vida/Kao/")
+library(shiny)
+library(DT)
+library(shinydashboard)
+library(rhandsontable)
+LOCATION<-"D:/1/Vida/Kao/"
+
+
+
+BG<-rgb(matrix(0.5,1,3))
+FG<-"black"
+COL_FC<-"#FF3333"
+
+warning_tab<-data.frame()
+
+SHINY<-1
+
+```
+
+
+
+```{r}
+######################################################
+SOLIDHEADER<-FALSE
+border_col<-"black"
+body<-dashboardBody(tags$head(tags$style(HTML('
+.box {margin: 10px;border-style: solid; border-color: black; border-width: 1px};
+# .checkbox-inline {
+#                     margin-left: 0px;
+#                     margin-right: 10px;
+#           }
+         # .checkbox-inline+.checkbox-inline {
+         #            margin-left: 0px;
+         #            margin-right: 10px;
+         #  }
+'))),
+
+box(width=NULL,
+        fluidRow(column(6,
+                        fluidRow(box(width=NULL,
+                              fluidRow(column(12,style='padding-left:10px;',tags$b("Resources and additional information"))),
+                              fluidRow(column(12,style='padding-left:10px;',downloadLink("downloadREADME",label="README"))),
+                              fluidRow(column(12,style='padding-left:10px;',downloadLink("downloadGlossary",label="Glossary")))
+                              )),
+                        fluidRow(box(width=NULL,
+                              fluidRow(column(12,style='padding-left:10px;',tags$b("Download the template to enter your data."))),
+                              fluidRow(br()),
+                              fluidRow(column(12,style='padding-left:10px;',downloadButton("downloadTemplate", "Download template"))),
+                              fluidRow(br()),
+                              fluidRow(column(12,style='padding-left:10px;',fileInput("file1", "Upload completed csv file",
+                                     multiple = FALSE,
+                                     accept = c(
+                                       # "text/csv",
+                                       # "text/comma-separated-values,text/plain",
+                                       ".csv")))),
+                              fluidRow(column(12,style='padding-right:30px;',
+                                                    uiOutput("Warnings"))),
+                              fluidRow(column(12,style='padding-right:30px;',
+                                                    uiOutput("GenerateReport"),
+                          conditionalPanel(
+            condition="($('html').hasClass('shiny-busy'))",
+            h3("Busy processing...")
+            # {data-icon="clock"}
+   )))
+                              
+                              )))
+                              ,
+    column(6,style='padding-right:30px;',box(width=NULL,
+                          fluidRow(column(12,style='padding-left:10px;',tags$b("Assay settings"))),
+                          fluidRow(column(12,style='padding-left:10px;',rHandsontableOutput("settingsTable"))),
+                          fluidRow(column(12,style='padding-left:10px;',tags$b("Assay validation settings"))),
+                          fluidRow(column(12,style='padding-left:10px;',rHandsontableOutput("validationTable")))
+                          )))
+    
+    ,solidHeader=SOLIDHEADER),
+box(width=NULL,DT::dataTableOutput("mytable"))
+)
+
+######################################################
+shinyApp(
+  ui <- shinyUI(fluidPage(
+    dashboardPage(
+      dashboardHeader(disable = TRUE),
+      dashboardSidebar(disable = TRUE),
+      body)
+  )),
+  ########################################################################################
+  
+  server <- shinyServer(function(input, output,session) {
+   
+    Warnings<-reactive({
+      # SHINY<-1
+      # source("TOOL_process_data.R")
+      warning_tab<-Data()[[4]]
+      warning_tab
+      # DF<-data.frame()
+      # DF
+    })
+    
+    output$ErrorTable <- renderDataTable({
+      # SHINY<-1
+      # source("TOOL_process_data.R")
+      warning_tab<-Data()[[4]]
+      warning_type<-Data()[[5]]
+      DF<-warning_tab
+      DF<-cbind(DF,data.frame("Type"=warning_type))
+      names(DF)<-c("Message","Type")
+      DF
+    },
+    options=list(iDisplayLength=10,                    # initial number of records
+                     aLengthMenu=c(5,10),                  # records/page options
+                     bLengthChange=0,                       # show/hide records per page dropdown
+                     bFilter=0,                                    # global search box on/off
+                     bInfo=0,                                      # information on/off (how many records filtered, etc)
+                     bAutoWidth=1                            # automatic column width calculation, disable if passing column width via aoColumnDefs
+                    ))
+    
+    output$WarningsTable <- renderDataTable({
+      # SHINY<-1
+      # source("TOOL_process_data.R")
+      warning_tab<-Data()[[4]]
+      names(warning_tab)<-"Details"
+      warning_tab
+    },
+    options=list(iDisplayLength=10,                    # initial number of records
+                     aLengthMenu=c(5,10),                  # records/page options
+                     bLengthChange=0,                       # show/hide records per page dropdown
+                     bFilter=0,                                    # global search box on/off
+                     bInfo=0,                                      # information on/off (how many records filtered, etc)
+                     bAutoWidth=1                            # automatic column width calculation, disable if passing column width via aoColumnDefs
+                    ))
+    
+    output$Warnings <- renderUI({
+      if(!is.null(input$file1)){
+        # SHINY<-1
+        # source("TOOL_process_data.R")
+        warning_tab<-Data()[[4]]
+        Generate_report<-Data()[[6]]
+        if(dim(warning_tab)[1]!=0&Generate_report){
+          box(width=NULL,
+              fluidRow(column(12,style='padding-left:10px;',tags$b("Warnings have been triggered, but you can still generate the report."))),
+              fluidRow(column(12,style='padding-left:10px;',dataTableOutput("WarningsTable"))),
+          )
+        }else if(dim(warning_tab)[1]!=0){
+          box(width=NULL,
+              fluidRow(column(12,style='padding-left:10px;',tags$b("There is an error with the uploaded file, please see details below."))),
+              fluidRow(column(12,style='padding-left:10px;',dataTableOutput("ErrorTable"))),
+          )
+        }
+      }
+    })
+    
+    output$GenerateReport <- renderUI({
+      if(!is.null(input$file1)){
+        # SHINY<-1
+        # source("TOOL_process_data.R")
+        warning_tab<-Data()[[4]]
+        Generate_report<-Data()[[6]]
+        if(dim(warning_tab)[1]==0|Generate_report){
+          box(width=NULL,
+              fluidRow(column(12,style='padding-left:10px;',textInput("reportTitle","Enter report title",value=""))),
+              fluidRow(column(12,style='padding-left:10px;',checkboxInput("includeAppendix",label="Include appendix with interpretation of results at qPCR replicate level",value=TRUE))),
+              fluidRow(column(12,style='padding-left:10px;',tags$b("Analyse data and generate report"))),
+              fluidRow(column(12,style='padding-left:10px;',downloadButton("downloadReport", "Generate report")))
+          )
+        }else{
+      #     dataTableOutput("WarningsTable")
+        }
+      }
+    })
+    
+    
+    inputData<-reactive({
+      if(!is.null(input$file1)){
+        D<-read.csv(input$file1$datapath,header=TRUE)
+      }else{
+        D<-read.csv("TOOL_template.csv")
+      }
+      D
+    })
+    
+    output$downloadTemplate <- downloadHandler(
+      filename ="TOOL_template.csv",
+      content = function(file) {
+        file.copy("TOOL_template.csv",file)
+      }
+    )
+    
+    output$downloadGlossary <- downloadHandler(
+      filename ="Glossary.docx",
+      content = function(file) {
+        file.copy("Glossary.docx",file)
+      }
+    )
+    
+    output$downloadREADME <- downloadHandler(
+      filename ="README.md",
+      content = function(file) {
+        file.copy("README.md",file)
+      }
+    )
+    
+    output$settingsTable <- renderRHandsontable({
+      DF<-data.frame("shortname"=c(
+        "N_cycles",
+        "Pos_minreps",
+        "LOD_Cq",
+        "IPC_delay",
+        "IPC_Cq",
+        "IPC_minreps",
+        "IPC_Inh_maxreps"
+      ), "Setting"=c(
+        55,
+        1,
+        38,
+        5,
+        40,
+        1,
+        1
+      ),"Description"=c("Total number of cycles used in qPCR run",
+                        "Minimum number of positive qPCR replicates for DNA sample to be considered positive (default: 2)",
+                        "Cq value for Limit of Detection (default: determined from standard curve [0])",
+                        "Inhibition cycle delay relative to pcrncs (default: 1)",
+                        "Override cycle delay, just use minimum cycle number that IPC should have attained (default:0 [OFF])",
+                        "Minimum number of IPC replicates that must have been tested for a DNA sample to be considered conclusively negative (default:12)",
+                        "Maximum number of IPC replicates that may have been inhibited for a DNA sample to be considered conclusively negative (default:0)"
+      ))
+      if (!is.null(DF)){
+        rhandsontable(DF,search=TRUE,selectCallback=TRUE,colHeaders=c("Short name","Setting","Description"))  %>%
+          hot_col(c(1,3),readOnly = TRUE) %>%
+          hot_col(2,format="0") %>%
+          hot_cols(fixedColumnsLeft=2) %>%
+          # autoColumnSize: true
+          hot_cols(colWidths = c(125,75,400))
+      }
+    })
+    
+    output$validationTable <- renderRHandsontable({
+      DF<-data.frame(Metric=c(
+          "Was in silico testing conducted and primers shown to amplify the target species?",
+          "Were the primers tested on tissue from the target species?",
+          "Was in silico testing conducted and potential crossamplification of non-target species shown to be low?",
+          "Were primers tested on non-target tissue of closely-related potentially co-occuring species?",
+          "Did the assay successfully detect the target species at a site of known presence?",
+          "Did the assay successfully detect the target species at multiple site of known presence?",
+          "Did the assay return negative results for the target species at multiple sites of known absence?",
+          "Has assay sensitivity (Limit of Detection and/or Limit of Quantification) been assessed?",
+          "Has site occupancy modelling (or equivalent) been conducted?",
+          "Has the probability of detecting a target species at a site been calculated?",
+          "Has the number of water samples needed to achieve reliable detection from a site been calculated?",
+          "Has the number of water samples needed to estimate probability of species absence given negative results from a site been calculated?",
+          "Has the number of qPCR replicates needed to achieve reliable detection in an eDNA sample been calculated?"
+        ), Level_of_Confidence=c(
+          "Low",
+          "Low",
+          "Low",
+          "Low",
+          "Low",
+          "Medium",
+          "Medium",
+          "Medium",
+          "High",
+          "High",
+          "High",
+          "High",
+          "High"
+        ), "user_input"=factor(c(1,1,1,1,1,1,1,1,1,1,0,0,0),levels=c(1,0))
+        )
+      if (!is.null(DF)){
+        rhandsontable(DF,search=TRUE,selectCallback=TRUE,colHeaders=c("Metric","Level of Confidence","1=Yes, 0=No"))  %>%
+          hot_col(c(1,2),readOnly = TRUE) %>%
+          hot_col(3,format="0") %>%
+          hot_cols(fixedColumnsLeft=2) %>%
+          # autoColumnSize: true
+          hot_cols(colWidths = c(400,100,100))
+      }
+    })
+    
+
+    output$mytable = DT::renderDataTable({
+      DF<-inputData()
+      DF
+    })
+    
+    assaySettings<-reactive({
+      if(!is.null(input$settingsTable)){
+        Settings<-hot_to_r(input$settingsTable)
+      }
+      Settings
+    })
+    
+    validationSettings<-reactive({
+      if(!is.null(input$validationTable)){
+        Settings<-hot_to_r(input$validationTable)
+      }
+      Settings$user_input<-as.numeric(as.matrix(Settings$user_input))
+      Settings
+    })
+    
+    Data<-reactive({
+      DF<-inputData()
+      Settings<-assaySettings()
+      validation<-validationSettings()
+      SHINY<-1
+      source("TOOL_process_data.R",local=TRUE)
+      
+      list(DF1,DF2,DF3,warning_tab,warning_type,Generate_report)
+      
+    })
+    
+    output$downloadReport <- downloadHandler(
+      filename=paste0("Report.pdf"),
+      content = function(file) {
+        params<-list(DF1=Data()[[1]],DF2=Data()[[2]],DF3=Data()[[3]],
+                     Title=input$reportTitle,
+                     Appendix=input$includeAppendix,
+                     Settings=assaySettings(),
+                     Validation=validationSettings(),
+                     Warnings=Warnings()
+                     )
+        rmarkdown::render(paste0("Rmd_TOOL.Rmd"),output_file=file,params=params)
+      }
+    )
+    
+  })
+)
+
+
+```
+
