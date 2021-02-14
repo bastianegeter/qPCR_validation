@@ -15,7 +15,6 @@
 #change IPC_Inh_maxreps default to nreps
 #check final rules, sampling_point level
 #shiny page should alwasy start with defaults
-#each dna sample can only have one sample type assigned
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
@@ -115,6 +114,16 @@ warning_count=1
 if(unique(DF$Plate)>1) {
   warning("Only one plate can be entered for each analysis") #must all have something
   warning_tab$warning[warning_count]<-"Only one plate can be entered for each analysis. Fix and rerun."
+  warning_count<-warning_count+1
+}
+
+#check that each DNA sample has only one sample type ##FAIL QC##
+tempDF<-as.data.frame.matrix(table(DF$DNA_Sample,DF$Sample_Type))
+tempDF[tempDF>0]<-1
+tempDF$sumrows<-rowSums(tempDF)
+if(max(tempDF$sumrows)>1) {
+  warning("Only one Sample_Type can be attributed to each DNA_Sample") ##FAIL QC##
+  warning_tab$warning[warning_count]<-"Only one Sample_Type can be attributed to each DNA_Sample. Fix and rerun."
   warning_count<-warning_count+1
 }
 
@@ -555,6 +564,44 @@ if(val_scale=="High"){
 #tidy final warning tab
 warning_tab<-warning_tab[warning_tab$warning!="",,drop=F]
 
+#make summary tab
+DF4<-data.frame(
+  Level=c("Sampling_ point","DNA_ Sample","qPCR_ replicate"),
+  Total=c(0,0,0),
+  Positive=c(0,0,0),
+  Negative=c(0,0,0),
+  Inconclusive=c(0,0,0),
+  Tentative=c(0,0,0)
+)
+
+#qPCR reps
+DF1interp<-stringr::str_split(DF1$Interpretation,":",simplify = T)[,1]
+DF1interp<-table(DF1interp)
+DF4[3,"Total"]<-sum(DF1interp)
+DF4[3,"Positive"]<-DF1interp[match("positive", names(DF1interp))]
+DF4[3,"Negative"]<-DF1interp[match("negative", names(DF1interp))]
+DF4[3,"Inconclusive"]<-DF1interp[match("Inconclusive", names(DF1interp))]
+DF4[3,"Tentative"]<-DF1interp[match("Tentative", names(DF1interp))]
+
+#DNA samples
+DF2interp<-table(DF2$Interpretation)
+DF4[2,"Total"]<-sum(DF2interp)
+DF4[2,"Positive"]<-DF2interp[match("positive", names(DF2interp))]
+DF4[2,"Negative"]<-DF2interp[match("negative", names(DF2interp))]
+DF4[2,"Inconclusive"]<-DF2interp[match("Inconclusive", names(DF2interp))]
+DF4[2,"Tentative"]<-DF2interp[match("Tentative", names(DF2interp))]
+
+#sampling point
+DF3interp<-table(DF3$Interpretation)
+DF4[1,"Total"]<-sum(DF3interp)
+DF4[1,"Positive"]<-DF3interp[match("Positive", names(DF3interp))]
+DF4[1,"Negative"]<-DF3interp[match("Negative", names(DF3interp))]
+DF4[1,"Inconclusive"]<-DF3interp[match("Inconclusive", names(DF3interp))]
+DF4[1,"Tentative"]<-DF3interp[match("Tentative", names(DF3interp))]
+
+DF4[is.na(DF4)]<-0
+
+
 ##############################################
 #OUTPUTS FOR REPORT
 #Summary of results
@@ -572,6 +619,7 @@ paste("Limit of detection cycle threshold:", LOD_Cq)
 DF1 # qpcr replicate level
 DF2 # dna sample level
 DF3 # sampling point level
+DF4 # summary table
 warning_tab
 ##############################################
 
