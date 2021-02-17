@@ -320,14 +320,14 @@ shinyApp(
       SHINY<-1
       source("TOOL_process_data.R",local=TRUE)
       
-      list(DF1,DF2,DF3,warning_tab,warning_type,Generate_report)
+      list(DF1,DF2,DF3,warning_tab,warning_type,Generate_report,DF4)
       
     })
     
     output$downloadReport <- downloadHandler(
       filename=paste0("Report.pdf"),
       content = function(file) {
-        params<-list(DF1=Data()[[1]],DF2=Data()[[2]],DF3=Data()[[3]],
+        params<-list(DF1=Data()[[1]],DF2=Data()[[2]],DF3=Data()[[3]],DF4=Data()[[7]],
                      Title=input$reportTitle,
                      Appendix=input$includeAppendix,
                      Settings=assaySettings(),

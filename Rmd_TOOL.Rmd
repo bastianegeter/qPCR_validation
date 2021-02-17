@@ -32,6 +32,7 @@ if(1){
   D1<-params$DF1
   D2<-params$DF2
   D3<-params$DF3
+  D4<-params$DF4
   Appendix<-params$Appendix
   Title<-params$Title
   if(Title!="")Title<-paste0("**",Title,"**")
@@ -134,11 +135,24 @@ R2 = `r sprintf("%s",Summary[7])` \newline
 PCR efficiency = `r sprintf("%s",Summary[8])` 
 
 
+```{r, echo=FALSE}
+##Summary of results
+knitr::kable(D4,caption="Summary of results",col.names=c("Level","Total","Positive","Negative","Inconclusive*","Tentative**")) %>%
+    kable_styling(latex_options = "hold_position") %>%
+column_spec(1,border_left=TRUE)%>%
+  column_spec(6,border_right=TRUE)
+```
+*Inconclusive: Not detected, but inhibition was either evident or not sufficiently tested \newline
+**Tentative: Weak signal (below the Limit of Detection)  
+
+
+
 
 \underline{Settings}\newline
 
 
-```{r, echo=FALSE,'h'}
+```{r, echo=FALSE}
+##Settings
 Length<-18
 Colwidths<-c(0.2,0.1,0.5)
 knitr::kable(Settings,caption="Assay settings supplied by user") %>%
