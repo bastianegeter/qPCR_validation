@@ -15,6 +15,7 @@
 #change IPC_Inh_maxreps default to nreps
 #check final rules, sampling_point level
 #shiny page should alwasy start with defaults
+#fix bug if more than x reps
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
