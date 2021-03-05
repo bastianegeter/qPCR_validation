@@ -16,6 +16,7 @@
 #check final rules, sampling_point level
 #shiny page should alwasy start with defaults
 #fix bug if more than x reps
+# add field IPC
 
 if(!is.element("SHINY",ls())){
   #Define the settings matrix
