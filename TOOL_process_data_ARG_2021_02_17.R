@@ -18,6 +18,7 @@
 #fix bug if more than x reps
 # add field IPC
 # at sampling point level code does not cater for having some neg and some inc samples (i.e. another threshold needed)
+# change "sampling point" to "sampling location"
 
 
 if(!is.element("SHINY",ls())){
