@@ -1,6 +1,7 @@
 #if we're in the dashboard, use the information from there, otherwise upload locally for development purposes
 
 #TODO
+#extend to multiple plates
 #add setting on whether to use LOD at all
 #add option to use concentration rather than cq value for LOD
 #add fields to write validation of non-default settings
@@ -10,7 +11,6 @@
 #add fieldncs to tests
 #add instruction for Sampling_Point for non-field controls
 #add internal extraction control
-#make summary table for front page
 #add tentative col to DF2
 #change IPC_Inh_maxreps default to nreps
 #check final rules, sampling_point level
