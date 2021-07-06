@@ -19,18 +19,14 @@ A standardised PDF report will be generated to accompany your qPCR results when 
 
 ## Usage
 
-**Step 1:**
-_**Important:**_ The tool requires a very specific data format to function, so please download a modifiable template from the home page. The template consists of a csv file with headers:
+**Step 1 (IMPORTANT):** The tool requires a very specific data format to function, so please download a modifiable template from the home page. The template consists of a csv file with headers:
 
 ```
 Plate	Well	Sample_Type	DNA_Sample	Replicate	Target_Cq	IPC_Cq	Std_Conc	Sampling_Point	Extraction_Batch	Volume_Water_Processed
 
 ```
-
-## Explanation of headers
-TODO - add specs
-
 ```
+Header	Details
 Plate	The plate ID that the DNA samples are being run on
 Well	Location of the sample on the plate
 Sample_Type	Type of DNA sample. There are six sample types allowed: external negative control (extnc), PCR Negative control (pcrnc), field negative control (fieldnc), positive control (pc), standard (std), and unknown (unkn)
@@ -42,9 +38,8 @@ Std_Conc	Concentration of the standard in ng µl-1
 Sampling_Point	Site name or number
 Extraction_Batch	Extraction batch number
 Volume_Water_Processed	Volume of water filtered for a sample in ml
-
-
 ```
+
 **Step 2:** Fill out the Assay Validation table by carefully considering and answering each of the questions (1 = Yes, 0 = No).
 
 **Step 3:** Fill out the qPCR Experimental Settings you used to generate your qPCR results.
