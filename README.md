@@ -9,20 +9,13 @@ The primary purpose of COASTER is to aid in the interpretation of quantitative P
 
 Alongside your qPCR data, COASTER requires two things:
 
-
 **1. Assay Validation:** COASTER assigns a confidence level (Low|Medium|High) to a qPCR assay based on a simple checklist of the assay validation steps that have been so far undertaken. Broadly, the confidence levels can be viewed as follows:
 
-- Low: interpret both positive and negative results with caution. There can be false positives (a positive signal may have arisen from a non-target species). There can be false negatives (an absence of detection does not indicate that the species is absent from the sampling point).
-- Medium: positive samples can interpreted as "Species DNA present in sample". There can be false negatives. 
-- High: positive samples can be interpreted as "Species DNA present in sample". There is low risk of false negatives.
-
+- _Low:_ interpret both positive and negative results with caution. There can be false positives (a positive signal may have arisen from a non-target species). There can be false negatives (an absence of detection does not indicate that the species is absent from the sampling point).
+- _Medium:_ positive samples can interpreted as "Species DNA present in sample". There can be false negatives. 
+- _High:_ positive samples can be interpreted as "Species DNA present in sample". There is low risk of false negatives.
 
 **2. qPCR Experimental Settings:** You are then required to fill in simple information on the experimental settings used to run your qPCR plates. 
-
-The script is implemented as a Shiny app which has a publicly available dashboard [here](https://vidasolutions.shinyapps.io/TOOL_dashboard/)
-
-
-_Note: COASTER remains a work in progress and we will fix new bugs if identified by users of the tool._
 
 ## Usage
 
@@ -67,3 +60,8 @@ Volume_Water_Processed	Volume of water filtered for a sample in ml
 3.	Results and interpretations includes a table summarising the results at 1) the Sampling_Point level 2) the DNA sample level and 3) [optional] the qPCR replicate level 
 4.	Samples will either be classified as positive, negative, inconclusive, or tentative. A tentative is the result of weak signal (Cq value below the limit of detection).
 
+The script is implemented as a Shiny app which has a publicly available dashboard [here](https://vidasolutions.shinyapps.io/TOOL_dashboard/)
+
+_**Disclaimers**_
+- Work in progress: COASTER remains a work in progress and we will fix new bugs if identified by users of the tool.
+- Interpretations: ...
