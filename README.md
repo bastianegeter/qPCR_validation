@@ -2,8 +2,6 @@
 
 (TODO) ADD LICENCE
 
-(TODO) DISCLAIMER ON INTERPRETATION - IMPORTANT
-
 ## Overview
 The primary purpose of COASTER is to aid in the interpretation of quantitative PCR (qPCR) results from environmental DNA (eDNA) samples. Alongside your qPCR data, COASTER requires two things:
 
