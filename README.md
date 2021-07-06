@@ -5,9 +5,7 @@
 (TODO) DISCLAIMER ON INTERPRETATION - IMPORTANT
 
 ## Overview
-The primary purpose of COASTER is to aid in the interpretation of quantitative PCR (qPCR) results from environmental DNA (eDNA) samples. A standardised PDF report will be generated to accompany your qPCR results when sent to other scientists and decision-makers. 
-
-Alongside your qPCR data, COASTER requires two things:
+The primary purpose of COASTER is to aid in the interpretation of quantitative PCR (qPCR) results from environmental DNA (eDNA) samples. Alongside your qPCR data, COASTER requires two things:
 
 **1. Assay Validation:** COASTER assigns a confidence level (Low|Medium|High) to a qPCR assay based on a simple checklist of the assay validation steps that have been so far undertaken. Broadly, the confidence levels can be viewed as follows:
 
@@ -16,6 +14,8 @@ Alongside your qPCR data, COASTER requires two things:
 - _High:_ positive samples can be interpreted as "Species DNA present in sample". There is low risk of false negatives.
 
 **2. qPCR Experimental Settings:** You are then required to fill in simple information on the experimental settings used to run your qPCR plates. 
+
+A standardised PDF report will be generated to accompany your qPCR results when sent to other scientists and decision-makers. 
 
 ## Usage
 
