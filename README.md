@@ -3,7 +3,7 @@
 (TODO) ADD LICENCE
 
 ## Overview
-Environmental DNA (eDNA) is increasingly being used to survey for local biodiversity. Despite the opportunities that eDNA provides, results can be difficult to interpret and compare between datasets that have used different **assays** and **experimental methods**. To overcome this, COASTER was developed for scientists and decision-makers to aid in the interpretation of qPCR results from eDNA surveys. The tool assigns a confidence level (Low|Medium|High) to a qPCR **assay** based on a simple checklist and automatically interprets the confidence of qPCR results based on the **experimental methods** used.
+Environmental DNA (eDNA) is increasingly being used to survey for local biodiversity. Despite the opportunities that eDNA provides, results can be difficult to interpret and compare between datasets that have used different **_assays_** and **_experimental methods_**. To overcome this, COASTER was developed for scientists and decision-makers to aid in the interpretation of qPCR results from eDNA surveys. The tool assigns a confidence level (Low|Medium|High) to a qPCR **_assay_** based on a simple checklist and automatically interprets the confidence of qPCR results based on the **_experimental methods_** used.
 
 To get started with COASTER, you will need to provide: 
 
@@ -63,10 +63,10 @@ Volume_Water_Processed	Volume of water filtered for a sample in ml
 The script is implemented as a Shiny app which has a publicly available dashboard [here](https://vidasolutions.shinyapps.io/TOOL_dashboard/)
 
 ## Common pitfalls to watch out for 
--**Header names:** It's very easy to change the names of the headers from what is in the data template, but these have to match. 
--**Number of plates used:** You must specify the number of plates that feature in your dataset.
+- **Header names:** It's very easy to change the names of the headers from what is in the data template, but these have to match. 
+- **Number of plates used:** You must specify the number of plates that feature in your dataset.
 - 
 
-## _**Disclaimers**_
+## **Disclaimers**
 - **Work in progress:** COASTER remains a work in progress and we will fix new bugs if identified by users of the tool.
 - **Interpretations:** ...
